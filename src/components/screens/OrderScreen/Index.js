@@ -1,22 +1,30 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import {
-  FlatList,
   StyleSheet,
   Text,
   View,
   Dimensions,
   useWindowDimensions,
 } from "react-native";
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import OrderItem from "../../../components/OrderItem/Index,";
 import orders from "../../../../assets/data/orders.json";
 import MapView, { Marker } from "react-native-maps";
 import { Entypo } from "@expo/vector-icons";
+import { DataStore } from "aws-amplify";
+import { Order } from "../../../models";
 
 const OrderScreen = () => {
-  const snapPoints = useMemo(() => ["70%"], []);
+  // const [orders, setOrders] = useState([]);
+  const snapPoints = useMemo(() => ["12%", "90%"], []);
   const { width, height } = useWindowDimensions();
   const bottomSheetRef = useRef(null);
+
+  // useEffect(() => {
+  //   DataStore.query(Order, (order) =>
+  //     order.status("eq", "READY_FOR-PICKUP")
+  //   ).then(setOrders);
+  // }, []);
 
   return (
     <View style={{ backgroundColor: "lightblue", flex: 1 }}>
@@ -57,7 +65,7 @@ const OrderScreen = () => {
           </Text>
           <Text>Availabe Orders : {orders.length}</Text>
         </View>
-        <FlatList
+        <BottomSheetFlatList
           data={orders}
           renderItem={({ item }) => <OrderItem order={item} />}
           contentContainerStyle={{ flexGrow: 1 }}

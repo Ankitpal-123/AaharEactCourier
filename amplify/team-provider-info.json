@@ -1,0 +1,20 @@
+{
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-aaharfood-staging-31633-authRole",
+      "UnauthRoleArn": "arn:aws:iam::574270660514:role/amplify-aaharfood-staging-31633-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::574270660514:role/amplify-aaharfood-staging-31633-authRole",
+      "Region": "eu-west-2",
+      "DeploymentBucketName": "amplify-aaharfood-staging-31633-deployment",
+      "UnauthRoleName": "amplify-aaharfood-staging-31633-unauthRole",
+      "StackName": "amplify-aaharfood-staging-31633",
+      "StackId": "arn:aws:cloudformation:eu-west-2:574270660514:stack/amplify-aaharfood-staging-31633/01d65510-993a-11ed-878c-0af9653417d6",
+      "AmplifyAppId": "dnihwskya6xdc"
+    },
+    "categories": {
+      "auth": {
+        "Aaharfood": {}
+      }
+    }
+  }
+}

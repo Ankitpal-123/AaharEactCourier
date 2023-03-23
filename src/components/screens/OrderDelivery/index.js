@@ -14,18 +14,11 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { Entypo, MaterialIcons, Ionicons } from "@expo/vector-icons";
 import MapViewDirections from "react-native-maps-directions";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { Order } from "../../../models";
+import { DataStore } from "aws-amplify";
 
 const order = orders[0];
-
-const restauratLocation = {
-  latitude: order.Restaurant.lat,
-  longitude: order.Restaurant.lng,
-};
-const deliveryLocation = {
-  latitude: order.User.lat,
-  longitude: order.User.lng,
-};
 
 const ORDER_STATUSES = {
   READY_FOR_PICKUP: "READY_FOR_PICKUP",
@@ -33,26 +26,35 @@ const ORDER_STATUSES = {
   PICKED_UP: "PICKED_UP",
 };
 
-const OrderDelivery = () => {
-  const snapPoints = useMemo(() => ["90%"], []);
+const OrderScreen = () => {
+  const [order, setOrder] = useState(null);
+  const snapPoints = useMemo(() => ["12%", "90%"], []);
   const navigation = useNavigation();
-  const bottomSheetRef = useRef(null);
+  const route = useRoute();
+  const id = route.params?.id;
   const mapRef = useRef(null);
-  const handleSheetChanges = (index) => {
-    console.log("Sheet index changed to", index);
-  };
   const { width, height } = useWindowDimensions();
+  const bottomSheetRef = useRef(null);
 
   const [driverLocation, setDriverLocation] = useState(null);
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [totalKm, setTotalKm] = useState(0);
+  const handleSheetChanges = (index) => {
+    console.log("Sheet index changed to", index);
+  };
   const [deliveryStatus, setDeliveryStatus] = useState(
     ORDER_STATUSES.READY_FOR_PICKUP
   );
   const [isDriverClose, setIsDriverClose] = useState(false);
 
   useEffect(() => {
-    const getDriverLocation = async () => {
+    if (!id) {
+      return;
+    }
+    DataStore.query(Order.id).then(setOrder);
+  }, [id]);
+  useEffect(() => {
+    async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (!status === "granted") {
         console.log("Nomono");
@@ -64,7 +66,6 @@ const OrderDelivery = () => {
         longitude: location.coords.longitude,
       });
     };
-    getDriverLocation();
 
     const foregroundSubscription = Location.watchPositionAsync(
       {
@@ -79,10 +80,22 @@ const OrderDelivery = () => {
       }
     );
     return foregroundSubscription;
-  }, []);
+  }, [id]);
+
+  const restauratLocation = {
+    latitude: order?.Restaurant?.lat,
+    longitude: order?.Restaurant?.lng,
+  };
+  const deliveryLocation = {
+    latitude: order?.User?.lat,
+    longitude: order?.User?.lng,
+  };
 
   if (!driverLocation) {
     return <ActivityIndicator size={"large"} />;
+  }
+  if (!order || driverLocation) {
+    return <ActivityIndicator size={"large"} color="grey" />;
   }
 
   const onButtonpressed = () => {
@@ -130,17 +143,11 @@ const OrderDelivery = () => {
     }
   };
 
+  if (!order || driverLocation) {
+    return <ActivityIndicator size={"large"} color="grey" />;
+  }
   return (
     <View style={{ backgroundColor: "lightblue", flex: 1 }}>
-      {deliveryStatus === ORDER_STATUSES.READY_FOR_PICKUP && (
-        <Ionicons
-          onPress={() => navigation.goBack()}
-          name="arrow-back-circle"
-          size={45}
-          color="white"
-          style={{ top: 40, right: 15, position: "absolute " }}
-        />
-      )}
       <MapView
         ref={mapRef}
         style={{ height, width }}
@@ -170,7 +177,6 @@ const OrderDelivery = () => {
           apikey={"AIzaSyA40_jSaAHHq633o3HKJujVrMHv9gcSV3E"}
           onReady={(result) => {
             setIsDriverClose(result.distance <= 0.1);
-
             setTotalMinutes(result.duration);
             setTotalKm(result.distance);
           }}
@@ -204,11 +210,17 @@ const OrderDelivery = () => {
           </View>
         </Marker>
       </MapView>
+      <Ionicons
+        onPress={() => navigation.goBack()}
+        name="arrow-back-circle"
+        size={45}
+        color="black"
+        style={{ top: 30, position: "absolute" }}
+      />
       <BottomSheet
         ref={bottomSheetRef}
         snapPoints={snapPoints}
-        onChange={handleSheetChanges}
-        handleIndicatorStyle={{ backgroundColor: "grey", width: 100 }}
+        handleIndicatorStyle={{ backgroundColor: "grey" }}
       >
         <View
           style={{
@@ -314,9 +326,7 @@ const OrderDelivery = () => {
             </Text>
           </View>
         </View>
-        <Pressable
-          onPress={onButtonpressed}
-          disabled={isButtonDisabled}
+        {/* <Pressable
           style={{
             backgroundColor: "#3FC060",
             marginTop: "auto",
@@ -325,6 +335,8 @@ const OrderDelivery = () => {
             borderRadius: 10,
             backgroundColor: isButtonDisabled() ? "grey" : "#3FC060",
           }}
+          onPress={onButtonpressed}
+          disabled={isButtonDisabled()}
         >
           <Text
             style={{
@@ -335,13 +347,15 @@ const OrderDelivery = () => {
               textAlign: "center",
             }}
           >
-            {renderButtonTitle}
+            {renderButtonTitle()}
           </Text>
-        </Pressable>
+        </Pressable> */}
       </BottomSheet>
     </View>
   );
 };
+
+export default OrderScreen;
 
 const styles = StyleSheet.create({
   contentContainer: {
@@ -352,4 +366,3 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
   },
 });
-export default OrderDelivery;
